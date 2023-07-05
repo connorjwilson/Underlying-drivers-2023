@@ -1,0 +1,227 @@
+library(layeranalyzer)
+
+##############
+# Import data
+##############
+
+stages <- read.csv("data/stages.csv")
+
+load("data/pradel_1.RData")
+pradel1_est <- predict(pradel_1)
+
+frag_data_s <- read.csv2("data/smoothed_frag_rate.csv")
+frag_data_ss <- frag_data_s[seq(from=17, by=20, length.out=533),]
+
+frag_index <- read.csv("data/fragmentation_data.csv")
+
+load("data/results/layer_reconstructions/orig.mod.Rdata")
+load("data/results/layer_reconstructions/ext.mod.Rdata")
+load("data/results/layer_reconstructions/samp.mod.Rdata")
+
+origts <- layer.data.series(time.points=(-stages$bottom[6:95]),
+                            value.points=pradel_results[[1]][3:92],
+                            std.dev=pradel_stdev[[1]][3:92],
+                            name="origts")
+
+extts <- layer.data.series(time.points=(-stages$top[4:93]),
+                           value.points=pradel_results[[2]][1:90],
+                           std.dev=pradel_stdev[[2]][1:90],
+                           name="extts")
+
+sampts <- layer.data.series(time.points=(-stages$mid[5:94]),
+                            value.points=pradel_results[[3]][2:91],
+                            std.dev=pradel_stdev[[3]][2:91],
+                            name="sampts")
+
+
+
+#####################
+# Orig/ext/samp/frag plot
+#####################
+
+par(mfrow=c(4,1), mar=c(4,5,0.5,5) + 0.6, oma=c(2,0,2,0), cex.axis=1, font.axis=1)
+
+plot(stages$bottom[6:95], (-log(pradel1_est$gamma$estimate)/stages$tdur[3:(nrow(stages)-1)])[3:92], 
+     type="b", main="", xlab="", ylab="(A) Origination rate", cex.lab=1.7,cex.main=2, cex.axis=1.5,
+     xlim=rev(range(stages$bottom[4:95])), log="y")
+arrows(stages$bottom[6:95], (-log(pradel1_est$gamma$lcl)/stages$tdur[3:(nrow(stages)-1)])[3:92],
+       stages$bottom[6:95], (-log(pradel1_est$gamma$ucl)/stages$tdur[3:(nrow(stages)-1)])[3:92],
+       code=3, angle=90, length=0.1, col="black", lty=2)
+abline(v=65, col="red", lwd=1)
+abline(v=200, col="red", lwd=1)
+abline(v=252, col="red", lwd=1)
+abline(v=359, col="red", lwd=1)
+abline(v=443, col="red", lwd=1)
+
+plot(stages$top[4:93], (-log(pradel1_est$phi$estimate)/stages$tdur[4:nrow(stages)])[1:90],
+     type="b", main="", xlab="", ylab="(B) Extinction rate", cex.lab=1.7,cex.main=2,cex.axis=1.5,
+     xlim=rev(range(stages$bottom[4:95])), log="y")
+arrows(stages$top[4:93], (-log(pradel1_est$phi$lcl)/stages$tdur[4:(nrow(stages))])[1:90],
+       stages$top[4:93], (-log(pradel1_est$phi$ucl)/stages$tdur[4:(nrow(stages))])[1:90],
+       code=3, angle=90, length=0.1, col="black", lty=2)
+abline(v=65, col="red", lwd=1)
+abline(v=200, col="red", lwd=1)
+abline(v=252, col="red", lwd=1)
+abline(v=359, col="red", lwd=1)
+abline(v=443, col="red", lwd=1)
+
+plot(stages$top[4:93], (-log(1-pradel1_est$p$estimate)/stages$dur[4:nrow(stages)])[2:91],
+     type="b", main="", xlab="", ylab="(C) Sampling rate", cex.lab=1.7, cex.main=2, cex.axis=1.5,
+     xlim=rev(range(stages$bottom[4:95])), log="y")
+arrows(stages$top[4:93], (-log(1-pradel1_est$p$lcl)/stages$dur[4:(nrow(stages))])[2:91],
+       stages$top[4:93], (-log(1-pradel1_est$p$ucl)/stages$dur[4:(nrow(stages))])[2:91],
+       code=3, angle=90, length=0.1, col="black", lty=2)
+abline(v=65, col="red", lwd=1)
+mtext("", line=0, side=1, col="red", adj=0.87, cex=0.81)
+abline(v=200, col="red", lwd=1)
+mtext("", line=0, side=1, col="red", adj=0.63, cex=0.81)
+abline(v=252, col="red", lwd=1)
+mtext("", line=0, side=1, col="red", adj=0.53, cex=0.81)
+abline(v=359, col="red", lwd=1)
+mtext("", line=0, side=1, col="red", adj=0.35, cex=0.81)
+abline(v=443, col="red", lwd=1)
+mtext("", line=0, side=1, col="red", adj=0.2, cex=0.81)
+
+plot(frag_index$time * (-1),frag_index$fragmentation.index, type="l", lwd="3",
+     xlab="millions of years ago", ylab="(D) Fragmentation index", 
+     main="", xaxt="n",
+     xlim=rev(range(frag_index$time * (-1))), cex.lab=1.63, cex.main=2, cex.axis=1.5)
+axis(1, at=c(500,400,300,200,100,0), cex.axis=1.5)
+
+par(new=T)
+plot(as.numeric(frag_data_ss$time), frag_data_ss$value, axes=F, ylab="", 
+     xlab="", type="l", col="blue", lwd="3", ylim=c(2*range(as.numeric(frag_data_ss$value))))
+axis(4, ylim=c(2*range(as.numeric(frag_data_ss$value))), col="blue", col.axis="blue", cex.axis=1.5)
+mtext("Fragmentation rate", side=4,
+      line=3, col="blue", cex=1.1)
+
+abline(v=-65, col="red", lwd=1)
+mtext("K-Pg", line=2, side=1, col="red", adj=0.87, cex=0.81)
+abline(v=-200, col="red", lwd=1)
+mtext("End-Tr", line=2, side=1, col="red", adj=0.63, cex=0.81)
+abline(v=-252, col="red", lwd=1)
+mtext("P-T", line=2, side=1, col="red", adj=0.53, cex=0.81)
+abline(v=-359, col="red", lwd=1)
+mtext("L-D", line=2, side=1, col="red", adj=0.335, cex=0.81)
+abline(v=-443, col="red", lwd=1)
+mtext("End-O", line=2, side=1, col="red", adj=0.175, cex=0.81)
+
+#legend(-557, -0.017, legend=c("Fragmentation index", "Fragmentation rate"),
+#       col=c("black", "blue"), lty=1, lwd=3)
+
+
+##################
+# Hidden layer plots
+##################
+
+par(mfrow=c(3,1), mar=c(4,5,0.5,5) + 0.6, oma=c(2,0,2,0), cex.axis=1, font.axis=1)
+
+plot(-(origts$time), exp(origts$value), xlab="", cex.axis=1.5,  
+     ylab="(A) Origination rate",lwd=1, cex.lab=1.7, xlim=rev(range(stages$bottom[4:95])), col="grey60", log="y")
+lines(-(orig.mod$process.time.points), 
+      exp(orig.mod$process.mean[1,]),lwd=1.5, col="blue")
+lines(-(orig.mod$process.time.points), exp(orig.mod$process.mean[2,]),
+      col="black",lwd=3)
+lines(-(orig.mod$process.time.points), 
+      exp(orig.mod$process.lower95[2,]),lt=2,col="black")
+lines(-(orig.mod$process.time.points), 
+      exp(orig.mod$process.upper95[2,]),lty=2,col="black")
+for(i in 1:length(origts$time))
+  lines(c(-origts$time[i],-origts$time[i]),
+        c(exp(origts$value[i]-1.96*origts$std.dev[i]),
+          exp(origts$value[i]+1.96*origts$std.dev[i])),lwd=1, col="grey60")
+abline(v=65, col="red", lwd=1)
+abline(v=200, col="red", lwd=1)
+abline(v=252, col="red", lwd=1)
+abline(v=359, col="red", lwd=1)
+abline(v=443, col="red", lwd=1)
+
+plot(-extts$time, exp(extts$value), xlab="", cex.axis=1.5,
+     ylab="(B) Extinction rate", cex.lab=1.7, xlim=rev(range(stages$bottom[4:95])), col="grey60", log="y")
+lines(-ext.mod$process.time.points, exp(ext.mod$process.mean[1,]),col="blue", lwd=1.5)
+lines(-ext.mod$process.time.points, exp(ext.mod$process.mean[2,]),
+      col="black", lwd=3)
+lines(-ext.mod$process.time.points, 
+      exp(ext.mod$process.lower95[2,]),lt=2,col="black")
+lines(-ext.mod$process.time.points, 
+      exp(ext.mod$process.upper95[2,]),lty=2,col="black")
+for(i in 1:length(extts$time))
+  lines(c(-extts$time[i],-extts$time[i]),
+        c(exp(extts$value[i]-1.96*extts$std.dev[i]),
+          exp(extts$value[i]+1.96*extts$std.dev[i])),lwd=1, col="grey60")
+abline(v=65, col="red", lwd=1)
+abline(v=200, col="red", lwd=1)
+abline(v=252, col="red", lwd=1)
+abline(v=359, col="red", lwd=1)
+abline(v=443, col="red", lwd=1)
+
+plot(-sampts$time, exp(sampts$value), xlab="millions of years ago", cex.axis=1.5,
+     ylab="(C) Sampling rate", cex.lab=1.7, xlim=rev(range(stages$bottom[4:95])), col="grey60", log="y")
+lines(-samp.mod$process.time.points, exp(samp.mod$process.mean[1,]), col="blue", lwd=1.5)
+lines(-samp.mod$process.time.points, exp(samp.mod$process.mean[2,]),
+      col="black", lwd=3)
+lines(-samp.mod$process.time.points, 
+      exp(samp.mod$process.lower95[2,]),lt=2,col="black")
+lines(-samp.mod$process.time.points, 
+      exp(samp.mod$process.upper95[2,]),lty=2,col="black")
+for(i in 1:length(sampts$time))
+  lines(c(-sampts$time[i],-sampts$time[i]),
+        c(exp(sampts$value[i]-1.96*sampts$std.dev[i]),
+          exp(sampts$value[i]+1.96*sampts$std.dev[i])),lwd=1, col="grey60")
+abline(v=65, col="red", lwd=1)
+mtext("K-Pg", line=2, side=1, col="red", adj=0.87, cex=0.81)
+abline(v=200, col="red", lwd=1)
+mtext("End-Tr", line=2, side=1, col="red", adj=0.63, cex=0.81)
+abline(v=252, col="red", lwd=1)
+mtext("P-T", line=2, side=1, col="red", adj=0.53, cex=0.81)
+abline(v=359, col="red", lwd=1)
+mtext("L-D", line=2, side=1, col="red", adj=0.335, cex=0.81)
+abline(v=443, col="red", lwd=1)
+mtext("End-O", line=2, side=1, col="red", adj=0.175, cex=0.81)
+
+##################
+# Top layer plots
+##################
+
+
+
+par(mfrow=c(3,1), mar=c(5,5,0.5,5) + 0.6, oma=c(2,0,2,0), cex.axis=1, font.axis=1)
+
+plot(-orig.mod$process.time.points, 
+     orig.mod$process.mean[1,]-orig.mod$process.mean[2,], xlim=rev(range(stages$bottom[4:95])),
+     lwd=3, col="black", cex.lab=1.9, cex.main=2, cex.axis=1.5,
+     xlab="",ylab="(A) Origination rate", type="l")
+abline(v=65, col="red", lwd=1)
+abline(v=200, col="red", lwd=1)
+abline(v=252, col="red", lwd=1)
+abline(v=359, col="red", lwd=1)
+abline(v=443, col="red", lwd=1)
+
+plot(-ext.mod$process.time.points, 
+     ext.mod$process.mean[1,]-ext.mod$process.mean[2,], xlim=rev(range(stages$bottom[4:95])),
+     lwd=3, col="black", cex.lab=1.9, cex.main=2, cex.axis=1.5,
+     xlab="",ylab="(B) Extinction rate", type="l")
+abline(v=65, col="red", lwd=1)
+abline(v=200, col="red", lwd=1)
+abline(v=252, col="red", lwd=1)
+abline(v=359, col="red", lwd=1)
+abline(v=443, col="red", lwd=1)
+
+plot(-samp.mod$process.time.points, 
+     samp.mod$process.mean[1,]-samp.mod$process.mean[2,], xlim=rev(range(stages$bottom[4:95])),
+     lwd=3, col="black", cex.lab=1.9, cex.main=2, cex.axis=1.5,
+     xlab="millions of years ago",ylab="(C) Sampling rate", type="l")
+
+abline(v=65, col="red", lwd=1)
+mtext("K-Pg", line=2, side=1, col="red", adj=0.87, cex=0.81)
+abline(v=200, col="red", lwd=1)
+mtext("End-Tr", line=2, side=1, col="red", adj=0.63, cex=0.81)
+abline(v=252, col="red", lwd=1)
+mtext("P-T", line=2, side=1, col="red", adj=0.53, cex=0.81)
+abline(v=359, col="red", lwd=1)
+mtext("L-D", line=2, side=1, col="red", adj=0.335, cex=0.81)
+abline(v=443, col="red", lwd=1)
+mtext("End-O", line=2, side=1, col="red", adj=0.175, cex=0.81)
+
+
+
