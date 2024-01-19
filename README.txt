@@ -8,7 +8,7 @@ The file 'occ_data.csv' contains the raw fossil observation data as downloaded f
 
 'fragmentation_data.csv' contains continental fragmentation data in the form of the fragmentation index from Zaffos et al. (2021).
 
-'stages.csv' contains the temporal data for the time bins used in the analyses.
+'stages.csv' contains the temporal data for the time bins used in the analyses, following the temporal stages from Ogg et al. (2016) as contained in the divDyn R package (Kocsis et al. 2019).
 
 
 
